@@ -3,6 +3,8 @@ from datetime import datetime
 from config import DATABASE 
 import os
 import cv2
+from math import sqrt, ceil, floor
+import numpy as np
 
 class DatabaseManager:
     def __init__(self, database):
@@ -80,6 +82,18 @@ class DatabaseManager:
     def get_random_prize(self):
         return cur.fetchall()[0]
     
+    def get_winners_img(self, user_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute(''' 
+            SELECT image FROM winners 
+            INNER JOIN prizes ON 
+            winners.prize_id = prizes.prize_id
+            WHERE user_id = ?''', (user_id, ))
+            return cur.fetchall()
+        
+    
   
 def hide_img(img_name):
     image = cv2.imread(f'img/{img_name}')
@@ -92,5 +106,7 @@ if __name__ == '__main__':
     manager = DatabaseManager(DATABASE)
     manager.create_tables()
     prizes_img = os.listdir('img')
+    data = [(x,) for x in prizes_img]
+    manager.add_prize(data)
     data = [(x,) for x in prizes_img]
     manager.add_prize(data)
